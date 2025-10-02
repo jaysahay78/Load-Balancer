@@ -1,0 +1,26 @@
+server:
+  listenPort: 8080
+  adminPort: 9000
+  maxConcurrent: 1000
+  protocol: HTTP1
+  maxHeaderBytes: 16384
+  maxBodyBytes: 10485760
+  idleTimeoutMs: 15000
+
+strategy: LEAST_CONNECTIONS
+sticky:
+  key: "X-Session-Key"
+
+rateLimit:
+  rps: 5000
+  burst: 10000
+
+upstreams:
+  - id: a1
+    host: worker1   # not 127.0.0.1
+    port: 9001
+    weight: 5
+  - id: a2
+    host: worker2
+    port: 9002
+    weight: 5

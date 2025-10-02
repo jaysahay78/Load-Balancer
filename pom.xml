@@ -1,0 +1,152 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.example</groupId>
+  <artifactId>LoadBalancer</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>LoadBalancer</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  <maven.compiler.release>19</maven.compiler.release>
+
+  <!-- versions -->
+  <micrometer.version>1.13.5</micrometer.version>
+  <otel.version>1.44.1</otel.version>
+  <snakeyaml.version>2.2</snakeyaml.version>
+  <logback.version>1.5.8</logback.version>
+  <logstash.version>7.4</logstash.version>
+  <guava.version>33.2.1-jre</guava.version>
+  <junit.version>5.11.3</junit.version>
+  <cyclonedx.version>2.8.0</cyclonedx.version>
+  <shade.plugin.version>3.5.3</shade.plugin.version>
+  <surefire.version>3.2.5</surefire.version>
+</properties>
+
+
+
+  <dependencies>
+    <!-- Metrics -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+      <version>${micrometer.version}</version>
+    </dependency>
+
+    <!-- OpenTelemetry -->
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+      <version>${otel.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk</artifactId>
+      <version>${otel.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+      <version>${otel.version}</version>
+    </dependency>
+
+    <!-- Config + logging -->
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>${snakeyaml.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>${logstash.version}</version>
+    </dependency>
+
+    <!-- Utils -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Java 19 + preview -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <compilerArgs>
+            <arg>--enable-preview</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <!-- JUnit 5 with preview at test runtime -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
+        <configuration>
+          <useModulePath>false</useModulePath>
+          <argLine>--enable-preview</argLine>
+        </configuration>
+      </plugin>
+
+      <!-- Uber-jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${shade.plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <createDependencyReducedPom>true</createDependencyReducedPom>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>org.example.LoadBalancer</mainClass>
+                </transformer>
+              </transformers>
+              <finalName>lb-app</finalName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- SBOM (unchanged) -->
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>${cyclonedx.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>makeAggregateBom</goal></goals>
+            <configuration>
+              <schemaVersion>1.5</schemaVersion>
+              <includeBomSerialNumber>true</includeBomSerialNumber>
+              <outputFormat>json</outputFormat>
+              <outputName>sbom</outputName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
