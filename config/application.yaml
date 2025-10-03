@@ -7,9 +7,10 @@ server:
   maxBodyBytes: 10485760
   idleTimeoutMs: 15000
 
-strategy: LEAST_CONNECTIONS
+strategy: CONSISTENT_HASH
 sticky:
-  key: "X-Session-Key"
+  key: X-Session-Key   # or: ip
+
 
 rateLimit:
   rps: 5000

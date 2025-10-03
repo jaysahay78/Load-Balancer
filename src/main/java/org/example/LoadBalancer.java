@@ -58,12 +58,12 @@ public class LoadBalancer {
     public void start() throws Exception {
         for (var u : cfg.upstreams) pool.add(new Upstream(u.id, u.host, u.port, u.weight));
 
-        String strategyName = cfg.strategy.toUpperCase(Locale.ROOT);
-        if ("LEAST_CONNECTIONS".equals(strategyName)) {
-            strategy = new LeastConnections();
-        } else {
-            strategy = new RoundRobin();
-        }
+        strategy = switch (cfg.strategy.toUpperCase(Locale.ROOT)) {
+            case "LEAST_CONNECTIONS" -> new LeastConnections();
+            case "WEIGHTED_RR" -> new WeightedRoundRobin();
+            case "CONSISTENT_HASH" -> { var ch = new ConsistentHashing(); ch.rebuild(pool); yield ch; }
+            default -> new RoundRobin();
+        };
 
         bucket = new TokenBucket(cfg.rateLimit.burst, cfg.rateLimit.rps);
 
